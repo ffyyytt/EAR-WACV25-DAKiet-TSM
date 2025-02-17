@@ -1,5 +1,6 @@
 import argparse
 import csv
+import glob
 import torch
 import pickle
 import torchvision
@@ -144,15 +145,16 @@ if __name__ == '__main__':
         rst = eval_video((i+1, data), net, args.test_segments)
         output.append([rst[1], rst[0]])
     
-    video_pred = [" ".join(list(map(str, torch.topk(x[0][0], k=5).indices.cpu().numpy().tolist()))) for x in output]
-    video_labels = [x[1] for x in output]
+    hmap = {0: "locomotion", 1: "manipulation", 2: "communication", 3: "hygiene", 4: "eating_drinking", 5: "leisure"}
+    video_pred = [ hmap[torch.topk(x[0][0], k=1).indices.cpu().numpy()[0]] for x in output]
+    video_labels = [x.replace("\\", "/").split("/")[-2] + ".mp4" for x in glob.glob("data/test_img/*/")]
     
     with open(f'{args.csv_file}.pickle', 'wb') as handle:
         pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
     with open(args.csv_file, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['Video', 'Prediction'])
+        csvwriter.writerow(['video_name', 'action_category'])
         for vid_name, pred in zip(video_labels, video_pred):
             csvwriter.writerow([vid_name, pred])
     
