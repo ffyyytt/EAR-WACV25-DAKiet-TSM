@@ -108,6 +108,7 @@ for i in range(16):
 
 # Running
 Example: https://www.kaggle.com/code/fdfyaytkt/ear-wacv25-dakiet-tsm-rgb
+
 Model: https://huggingface.co/fdfyaytkt/ear-wacv25-tsm-rgb-resnext50_32x4d
 ## Train
 ```console
