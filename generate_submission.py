@@ -47,9 +47,12 @@ if __name__ == '__main__':
     
     # Load the model
     is_shift, shift_div, shift_place = parse_shift_option_from_log_name(args.weights)
-    args.modality = 'RGB'
-    data_length = 1
-    normalize = IdentityTransform()
+    if 'RGB' in args.weights:
+        args.modality = 'RGB'
+    elif 'RTD' in args.weights:
+        args.modality = 'RTD'
+    else:
+        args.modality = 'Flow'
     this_arch = args.arch
     
     num_class, args.train_list, args.val_list, args.root_path, prefix = dataset_config.return_dataset(args.dataset, args.modality)
@@ -76,6 +79,16 @@ if __name__ == '__main__':
         GroupScale(net.scale_size),
         GroupCenterCrop(input_size),
     ])
+    
+    if args.modality != 'RGBDiff':
+        normalize = GroupNormalize(net.input_mean, net.input_std)
+    else:
+        normalize = IdentityTransform()
+    
+    if args.modality in ['RGB', 'RTD']:
+        data_length = 1
+    elif args.modality in ['Flow', 'RGBDiff']:
+        data_length = 5
     
     data_loader = torch.utils.data.DataLoader(
         TSNDataSet(args.root_path, list_file=args.train_list, num_segments=args.test_segments,
@@ -131,10 +144,11 @@ if __name__ == '__main__':
     for i, (data, target) in enumerate(tqdm(data_loader)):
         rst = eval_video((i+1, data), net, args.test_segments)
         output.append([rst[1], rst[0]])
-    
+        
+        
     hmap = {0: "locomotion", 1: "manipulation", 2: "communication", 3: "hygiene", 4: "eating_drinking", 5: "leisure"}
     video_pred = [ hmap[torch.topk(x[0][0], k=1).indices.cpu().numpy()[0]] for x in output]
-    video_labels = [x[1] for x in output]
+    video_labels = [x.replace("\\", "/").split("/")[-2]+".mp4" for x in glob.glob("data/test_img/*/")]
     
     with open(f'{args.csv_file}.pickle', 'wb') as handle:
         pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
