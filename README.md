@@ -107,6 +107,8 @@ for i in range(16):
 
 
 # Running
+Example: https://www.kaggle.com/code/fdfyaytkt/ear-wacv25-dakiet-tsm-rgb
+Model: https://huggingface.co/fdfyaytkt/ear-wacv25-tsm-rgb-resnext50_32x4d
 ## Train
 ```console
 python main.py elderly RGB --arch resnext50_32x4d --num_segments 8 --gd 20 --lr 0.001 --wd 1e-4 --lr_steps 20 40 --epochs 100 --batch-size 4 -j 32 --dropout 0.5 --consensus_type=avg --eval-freq=1 --shift --shift_div=8 --shift_place=blockres --npb
